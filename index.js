@@ -18,19 +18,11 @@ app.get("/api/courses", (req, res) => {
 });
 
 app.post("/api/courses", (req, res) => {
-  const schema = Joi.object({
-    title: Joi.string().alphanum().min(3).max(100).required(),
-  });
+  const { error, value } = validateCourse(req.body);
 
-
-   const {error, value} =schema.validate(req.body)
-
-if (error) {
-       return res.status(400).send(error.details[0].message);
-
-}
-
-
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
 
   const course = {
     id: courses.length + 1,
@@ -41,6 +33,42 @@ if (error) {
   res.send(course);
 });
 
+app.put("/api/courses/:id", (req, res) => {
+  let course = courses.find((course) => course.id === parseInt(req.params.id));
+
+  if (!course) {
+    res.status(404).send("course not found ");
+  }
+
+  const { error, value } = validateCourse(req.body);
+
+  if (error) {
+    res.status(400).send(error.details[0].message);
+  }
+
+  course.title = value.title;
+
+  res.send(course);
+});
+
+
+
+app.delete('/api/courses/:id',(req,res) => {
+  let course = courses.find((course) => course.id === parseInt(req.params.id));
+  
+  if (!course) {
+    return  res.status(404).send("course not found ");
+  }
+
+  const index=courses.indexOf(course)
+
+  courses.splice(index,1)
+
+  res.status(204).send({})
+}
+)
+
+
 app.get("/api/courses/:id", (req, res) => {
   let course = courses.find((course) => course.id === parseInt(req.params.id));
   if (!course) {
@@ -49,6 +77,14 @@ app.get("/api/courses/:id", (req, res) => {
     res.send(course);
   }
 });
+
+function validateCourse(course) {
+  const schema = Joi.object({
+    title: Joi.string().alphanum().min(3).max(10).required(),
+  });
+
+  return schema.validate(course);
+}
 
 const port = process.env.PORT || 3000;
 
